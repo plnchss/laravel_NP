@@ -2,8 +2,16 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MainController;
+use App\Http\Controllers\AuthController;
 
 
+//auth
+Route::get('/auth/signin', [AuthController::class,  'signin']);
+Route::post('/auth/registr', [AuthController::class,  'registr']);
+
+
+
+//main
 Route::get('/', [MainController::class,  'index']);
 Route::get('/full_image/{img}', [MainController::class,  'show']);
 
