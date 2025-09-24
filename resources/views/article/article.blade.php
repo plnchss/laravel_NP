@@ -22,10 +22,12 @@
       <th scope="row">{{$article->date_public}}</th>
       <td><a href="/article/{{$article->id}}">{{$article->title}}</a></td>
       <td>{{$article->text}}</td>
-      <td>{{\App\Models\User::FindOrFail($article->users_id)->name}}</td>
+      <td>{{ $article->user?->name ?? 'Без автора' }}</td>
     </tr>
     @endforeach
   </tbody>
 </table>
 {{$articles->links()}}
 @endsection
+
+

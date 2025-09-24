@@ -4,6 +4,12 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MainController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ArticleController;
+use App\Http\Controllers\CommentController;
+
+
+//comments
+Route::resource('comments', CommentController::class)->only(['store', 'destroy']);
+
 
 
 //article

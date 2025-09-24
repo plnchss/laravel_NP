@@ -46,10 +46,13 @@ class ArticleController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Article $article)
-    {
-        return view('article.show', ['article'=>$article]);
-    }
+  public function show(Article $article)
+{
+    // загружаем сразу комментарии
+    $article->load('comments');
+    return view('article.show', ['article' => $article]);
+}
+
 
     /**
      * Show the form for editing the specified resource.
