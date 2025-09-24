@@ -3,7 +3,7 @@
 @section('content')
 
 
-  <ul class="list-group">
+  <ul class="list-group mb-3">
     @foreach($errors->all() as $error)
        <li class="list-group-item list-group-item-danger">      
            {{$error}}
@@ -14,8 +14,8 @@
 <form action="/article" method="POST">
     @CSRF
   <div class="mb-3">
-    <label for="Date" class="form-label">Date public</label>
-    <input type="date" class="form-control" id="date"  name="date">
+    <label for="Date" class="form-label">Enter public date</label>
+    <input type="date" class="form-control" id="date"  name="date" value="{{\Carbon\Carbon::now()->format('Y-m-d')}}">
   </div>
 <div class="mb-3">
     <label for="title" class="form-label">Enter title</label>
@@ -23,7 +23,7 @@
   </div>
   <div class="mb-3">
     <label for="text" class="form-label">Enter description</label>
-    <textarea type="text" class="form-control" id="exampleInputPassword1"></textarea>
+    <textarea name="text" id="text" class="form-control" ></textarea>
   </div>
   <button type="submit" class="btn btn-primary">Save article</button>
 </form>
