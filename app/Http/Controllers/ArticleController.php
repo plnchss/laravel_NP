@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Article;
+use App\Models\Comment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+
 
 class ArticleController extends Controller
 {
@@ -21,6 +24,7 @@ class ArticleController extends Controller
      */
     public function create()
     {
+        Gate::authorize('create', Article::class);
         return view('article.create');
     }
 
@@ -29,6 +33,7 @@ class ArticleController extends Controller
      */
     public function store(Request $request)
     {
+        Gate::authorize('create', Article::class);
         $request->validate([
             'date' => 'required|date',
             'title' => 'required|min:10',
@@ -46,19 +51,20 @@ class ArticleController extends Controller
     /**
      * Display the specified resource.
      */
-  public function show(Article $article)
-{
-    // загружаем сразу комментарии
-    $article->load('comments');
-    return view('article.show', ['article' => $article]);
-}
-
+    public function show(Article $article)
+    {
+        $comments = Comment::where('article_id', $article->id)
+                            ->where('accept', true)
+                            ->get();
+        return view('article.show', ['article'=>$article, 'comments'=>$comments]);
+    }
 
     /**
      * Show the form for editing the specified resource.
      */
     public function edit(Article $article)
     {
+        Gate::authorize('restore', $article);
         return view('article.edit', ['article'=>$article]);
     }
 
@@ -67,6 +73,7 @@ class ArticleController extends Controller
      */
     public function update(Request $request, Article $article)
     {
+        Gate::authorize('update', $article);
         $request->validate([
             'date' => 'required|date',
             'title' => 'required|min:10',
@@ -79,9 +86,14 @@ class ArticleController extends Controller
         $article->save();
         return redirect()->route('article.show', ['article'=>$article->id])->with('message','Update successful');
     }
+
+    /**
+     * Remove the specified resource from storage.
+     */
     public function destroy(Article $article)
     {
-         $article->delete();
-          return redirect()->route('article.index')->with('message','Delete successful'); 
-        } 
+        Gate::authorize('delete', $article);
+        $article->delete();
+        return redirect()->route('article.index')->with('message','Delete successful');
     }
+}

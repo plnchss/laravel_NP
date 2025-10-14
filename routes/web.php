@@ -8,7 +8,7 @@ use App\Http\Controllers\CommentController;
 
 
 //comments
-Route::resource('comments', CommentController::class)->only(['store', 'destroy']);
+Route::resource('comments', CommentController::class)->only(['store', 'destroy', 'update']);
 
 
 
