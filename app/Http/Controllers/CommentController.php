@@ -3,7 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Comment;
+use App\Models\Article;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\NewCommentNotify;
 
 class CommentController extends Controller
 {
@@ -21,7 +26,19 @@ class CommentController extends Controller
         // Добавляем ID текущего пользователя
         $validated['user_id'] = auth()->id();
 
-        Comment::create($validated);
+        // Создаём комментарий
+        $comment = Comment::create($validated);
+
+        // Находим всех модераторов
+        $moderators = User::where('role', 'moderator')->get();
+
+        // Отправляем письма модераторам
+        if ($moderators->isNotEmpty()) {
+            Notification::send($moderators, new NewCommentNotify(
+                $comment->article->title,
+                $comment->article->id
+            ));
+        }
 
         return redirect()
             ->back()
@@ -33,7 +50,6 @@ class CommentController extends Controller
      */
     public function destroy(Comment $comment)
     {
-        // Проверяем право удаления через политику
         $this->authorize('delete', $comment);
 
         $comment->delete();
@@ -48,7 +64,6 @@ class CommentController extends Controller
      */
     public function update(Request $request, Comment $comment)
     {
-        // Проверяем право редактирования через политику
         $this->authorize('update', $comment);
 
         $validated = $request->validate([
@@ -60,5 +75,28 @@ class CommentController extends Controller
         return redirect()
             ->back()
             ->with('message', 'Комментарий успешно обновлён!');
+    }
+
+    /**
+     * Одобрение комментария (для модератора)
+     */
+    public function accept(Comment $comment)
+    {
+        $this->authorize('accept', $comment);
+
+        $comment->accept = true;
+
+        if ($comment->save()) {
+            $article = Article::findOrFail($comment->article_id);
+            $users = User::where('id', '!=', $comment->user_id)->get();
+
+            Notification::send($users, new NewCommentNotify($article->title, $article->id));
+
+            Cache::forget('comments' . $article->id);
+        }
+
+        return redirect()
+            ->back()
+            ->with('message', 'Комментарий успешно одобрен!');
     }
 }
