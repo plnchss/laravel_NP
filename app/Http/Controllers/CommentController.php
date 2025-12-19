@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\Commentmail;
+use App\Jobs\VeryLongJob;
 
 class CommentController extends Controller
 {
@@ -38,11 +39,11 @@ class CommentController extends Controller
         $comment->accept = false;
         $comment->save();
 
-        // Отправляем письмо модератору (СТАРАЯ ЛОГИКА)
+     // Диспетчер очереди вместо прямого отправления
         $article = $comment->article;
         $author = $comment->user->name;
 
-        Mail::to('p.nazarenko04@mail.ru')->send(new Commentmail($comment, $article, $author));
+        VeryLongJob::dispatch($comment, $article, $author);
 
         return redirect()
             ->route('article.show', $request->article_id)
