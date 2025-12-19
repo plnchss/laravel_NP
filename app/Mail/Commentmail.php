@@ -32,7 +32,7 @@ class Commentmail extends Mailable
     {
         // Log::alert(env("MAIL_FROM_ADDRESS"));
         return new Envelope(
-            from: new Address(env("MAIL_FROM_ADDRESS"), 'olga'),
+            from: new Address(env("MAIL_FROM_ADDRESS"), 'polina'),
             subject: 'Commentmail',
         );
     }
@@ -43,7 +43,7 @@ class Commentmail extends Mailable
     public function content(): Content
     {
         return new Content(
-            markdown: 'mail.comment',
+           markdown: 'mail.comment_moderation',
             with:[
                 'comment'=>$this->comment,
                 'article_title'=>$this->article->title,

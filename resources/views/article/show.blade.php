@@ -30,7 +30,7 @@
 <h4>Comments</h4>
 
 <ul class="list-group mb-4">
-    @forelse ($article->comments as $comment)
+    @forelse ($comments as $comment)
         <li class="list-group-item">
             {{-- Текст комментария --}}
             <div id="comment-text-{{ $comment->id }}" class="mb-2">
@@ -52,7 +52,6 @@
             {{-- Проверка прав доступа --}}
             @can('update', $comment)
             <div class="d-flex align-items-center">
-                {{-- Кнопка редактирования комментария --}}
                 <button class="btn btn-sm btn-warning me-2" onclick="showEditForm({{ $comment->id }})">
                     Edit
                 </button>
@@ -61,7 +60,6 @@
 
             @can('delete', $comment)
             <div class="d-flex align-items-center mt-2">
-                {{-- Кнопка удаления комментария --}}
                 <form action="{{ route('comments.destroy', $comment) }}" method="POST" class="d-inline">
                     @csrf
                     @method('DELETE')

@@ -4,99 +4,96 @@ namespace App\Http\Controllers;
 
 use App\Models\Comment;
 use App\Models\Article;
-use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Notification;
-use App\Notifications\NewCommentNotify;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\Commentmail;
 
 class CommentController extends Controller
 {
-    /**
-     * Сохранение нового комментария
-     */
+    // Модерация
+    public function index()
+    {
+        // Показываем только комментарии, которые НЕ приняты
+        $comments = Comment::where('accept', false)
+                           ->latest()
+                           ->paginate(10);
+
+        return view('mail.index', ['comments' => $comments]);
+    }
+
+    // Добавление комментария
     public function store(Request $request)
     {
-        // Проверяем поля
-        $validated = $request->validate([
-            'text' => 'required|string|max:500',
+        $request->validate([
+            'text' => 'required|min:10',
             'article_id' => 'required|exists:articles,id',
         ]);
 
-        // Добавляем ID текущего пользователя
-        $validated['user_id'] = auth()->id();
-
         // Создаём комментарий
-        $comment = Comment::create($validated);
+        $comment = new Comment();
+        $comment->text = $request->text;
+        $comment->user_id = auth()->id();
+        $comment->article_id = $request->article_id;
+        $comment->accept = false;
+        $comment->save();
 
-        // Находим всех модераторов
-        $moderators = User::where('role', 'moderator')->get();
+        // Отправляем письмо модератору (СТАРАЯ ЛОГИКА)
+        $article = $comment->article;
+        $author = $comment->user->name;
 
-        // Отправляем письма модераторам
-        if ($moderators->isNotEmpty()) {
-            Notification::send($moderators, new NewCommentNotify(
-                $comment->article->title,
-                $comment->article->id
-            ));
-        }
+        Mail::to('p.nazarenko04@mail.ru')->send(new Commentmail($comment, $article, $author));
 
         return redirect()
-            ->back()
-            ->with('message', 'Комментарий успешно добавлен!');
+            ->route('article.show', $request->article_id)
+            ->with('message', 'Комментарий успешно добавлен и отправлен на модерацию.');
     }
 
-    /**
-     * Удаление комментария
-     */
-    public function destroy(Comment $comment)
+    // Редактирование
+    public function edit(Comment $comment)
     {
-        $this->authorize('delete', $comment);
-
-        $comment->delete();
-
-        return redirect()
-            ->back()
-            ->with('message', 'Комментарий удалён!');
+        Gate::authorize('update', $comment);
+        return view('comment.edit', ['comment' => $comment]);
     }
 
-    /**
-     * Обновление (редактирование) комментария
-     */
     public function update(Request $request, Comment $comment)
     {
-        $this->authorize('update', $comment);
+        Gate::authorize('update', $comment);
 
-        $validated = $request->validate([
-            'text' => 'required|string|max:500',
+        $request->validate([
+            'text' => 'required|min:10',
         ]);
 
-        $comment->update($validated);
+        $comment->text = $request->text;
+        $comment->save();
 
-        return redirect()
-            ->back()
-            ->with('message', 'Комментарий успешно обновлён!');
+        return redirect()->route('article.show', $comment->article_id);
     }
 
-    /**
-     * Одобрение комментария (для модератора)
-     */
+    // Удаление
+    public function delete(Comment $comment)
+    {
+        Gate::authorize('delete', $comment);
+        $comment->delete();
+        return redirect()->back();
+    }
+
+    // Принять комментарий
     public function accept(Comment $comment)
     {
-        $this->authorize('accept', $comment);
-
         $comment->accept = true;
+        $comment->save();
 
-        if ($comment->save()) {
-            $article = Article::findOrFail($comment->article_id);
-            $users = User::where('id', '!=', $comment->user_id)->get();
+        return redirect()->route('comments.moderation')
+            ->with('message', 'Комментарий одобрен.');
+    }
 
-            Notification::send($users, new NewCommentNotify($article->title, $article->id));
+    // Отклонить комментарий
+    public function reject(Comment $comment)
+    {
+        $comment->delete();
 
-            Cache::forget('comments' . $article->id);
-        }
-
-        return redirect()
-            ->back()
-            ->with('message', 'Комментарий успешно одобрен!');
+        return redirect()->route('comments.moderation')
+            ->with('message', 'Комментарий отклонён.');
     }
 }

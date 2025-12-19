@@ -4,8 +4,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-
-class NewCommentNotify extends Notification
+class NewCommentModerationNotify extends Notification
 {
     use Queueable;
 
@@ -28,20 +27,11 @@ class NewCommentNotify extends Notification
     public function toMail($notifiable)
     {
         return (new MailMessage)
-            ->subject('Новый комментарий')
-            ->markdown('mail.comment', [
+            ->subject('Новый комментарий требует модерации')
+            ->markdown('mail.comment_moderation', [
                 'comment' => $this->comment,
                 'article_title' => $this->articleTitle,
                 'author' => $this->author,
             ]);
-    }
-
-    public function toArray($notifiable)
-    {
-        return [
-            'comment_id' => $this->comment->id,
-            'article_title' => $this->articleTitle,
-            'author' => $this->author,
-        ];
     }
 }
