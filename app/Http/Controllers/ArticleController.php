@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Article;
 use App\Models\Comment;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\NewArticleNotification;
 use App\Events\NewArticleEvent;
 
 class ArticleController extends Controller
@@ -50,6 +53,10 @@ class ArticleController extends Controller
 
         // Отправка события для пуша
         NewArticleEvent::dispatch($article);
+
+        // Отправка уведомления всем зарегистрированным пользователям, кроме автора
+        $readers = User::where('id', '!=', auth()->id())->get();
+        Notification::send($readers, new NewArticleNotification($article));
 
         return redirect()->route('article.index')->with('message', 'Create successful');
     }

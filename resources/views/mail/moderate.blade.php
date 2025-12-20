@@ -1,48 +1,64 @@
-@extends('layout')
+{{-- resources/views/mail/index.blade.php --}}
+@extends('layouts.app')
 
 @section('content')
-<h3>Модерация комментариев</h3>
+<div class="container mx-auto p-4">
+    <h1 class="text-2xl font-bold mb-4">Модерация комментариев</h1>
 
-@if(session()->has('message'))
-    <div class="alert alert-success my-3">{{ session('message') }}</div>
-@endif
-
-@if($comments->count())
-<ul class="list-group">
-    @foreach($comments as $comment)
-    <li class="list-group-item">
-        <div class="d-flex justify-content-between">
-            <div>
-                <strong>Статья:</strong>
-                <a href="{{ route('article.show', $comment->article->id) }}">
-                    {{ $comment->article->title }}
-                </a>
-                <div class="mt-2"><strong>Комментарий:</strong> {{ $comment->text }}</div>
-                <div class="mt-1 text-muted"><small>От: {{ $comment->user?->name ?? 'Гость' }}</small></div>
-            </div>
-
-            <div class="d-flex align-items-center">
-                <form action="{{ route('comments.accept', $comment) }}" method="POST" class="me-2">
-                    @csrf
-                    @method('PATCH')
-                    <button type="submit" class="btn btn-sm btn-success">Принять</button>
-                </form>
-
-                <form action="{{ route('comments.reject', $comment) }}" method="POST">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-sm btn-danger">Отклонить</button>
-                </form>
-            </div>
+    @if(session('message'))
+        <div class="bg-green-200 text-green-800 p-2 mb-4 rounded">
+            {{ session('message') }}
         </div>
-    </li>
-    @endforeach
-</ul>
+    @endif
 
-<div class="mt-3">
-    {{ $comments->links() }}
+    @if($comments->count() > 0)
+        <table class="w-full border-collapse border border-gray-300">
+            <thead>
+                <tr class="bg-gray-100">
+                    <th class="border border-gray-300 p-2">ID</th>
+                    <th class="border border-gray-300 p-2">Комментарий</th>
+                    <th class="border border-gray-300 p-2">Пользователь</th>
+                    <th class="border border-gray-300 p-2">Статья</th>
+                    <th class="border border-gray-300 p-2">Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($comments as $comment)
+                    <tr>
+                        <td class="border border-gray-300 p-2">{{ $comment->id }}</td>
+                        <td class="border border-gray-300 p-2">{{ $comment->text }}</td>
+                        <td class="border border-gray-300 p-2">{{ $comment->user->name ?? 'Гость' }}</td>
+                        <td class="border border-gray-300 p-2">{{ $comment->article->title ?? 'Нет статьи' }}</td>
+                        <td class="border border-gray-300 p-2 flex gap-2">
+                            {{-- Форма для одобрения (PATCH) --}}
+                            <form action="{{ route('comments.accept', $comment->id) }}" method="POST">
+                                @csrf
+                                @method('PATCH')
+                                <button type="submit" class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600">
+                                    Одобрить
+                                </button>
+                            </form>
+
+                            {{-- Форма для отклонения (DELETE) --}}
+                            <form action="{{ route('comments.reject', $comment->id) }}" method="POST">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">
+                                    Отклонить
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+
+        {{-- Пагинация --}}
+        <div class="mt-4">
+            {{ $comments->links() }}
+        </div>
+    @else
+        <p>Нет комментариев на модерацию.</p>
+    @endif
 </div>
-@else
-    <div class="alert alert-info">Нет новых комментариев для модерации.</div>
-@endif
 @endsection
