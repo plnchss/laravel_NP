@@ -1,9 +1,9 @@
 @extends('layout')
 @section('content')
 
-  @if(session()->has('message'))
+@if(session()->has('message'))
 <div class="alert alert-success" role="alert">
-{{session('message')}}
+    {{ session('message') }}
 </div>
 @endif
 
@@ -19,15 +19,17 @@
   <tbody>
     @foreach($articles as $article)
     <tr>
-      <th scope="row">{{$article->date_public}}</th>
-      <td><a href="/article/{{$article->id}}">{{$article->title}}</a></td>
-      <td>{{$article->text}}</td>
+      <th scope="row">{{ $article->date_public }}</th>
+      <td><a href="/article/{{ $article->id }}">{{ $article->title }}</a></td>
+      <td>{{ $article->text }}</td>
       <td>{{ $article->user?->name ?? 'Без автора' }}</td>
     </tr>
     @endforeach
   </tbody>
 </table>
-{{$articles->links()}}
+
+<!-- Пагинация -->
+<div class="d-flex justify-content-center mt-3">
+    {{ $articles->links() }}
+</div>
 @endsection
-
-

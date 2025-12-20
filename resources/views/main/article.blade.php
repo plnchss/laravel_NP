@@ -1,5 +1,6 @@
-@extends('layout')
+@extends('layout') 
 @section('content')
+
 <table class="table">
   <thead>
     <tr>
@@ -17,7 +18,10 @@
       <td>{{$article->name}}</td>
       <td>{{$article->shortDesc}}</td>
       <td>{{$article->desc}}</td>
-      <td><a href="/full_image/{{$article->full_image}}"> <img src="{{URL::asset($article->preview_image)}}" alt=""> </a> </td>
+      <td><a href="/full_image/{{$article->full_image}}"> 
+            <img src="{{URL::asset($article->preview_image)}}" alt=""> 
+          </a> 
+      </td>
     </tr>
     @endforeach
     <tr>
@@ -28,4 +32,23 @@
     </tr>
   </tbody>
 </table>
+
+<!-- Pusher JS для уведомлений -->
+<script src="https://js.pusher.com/8.4.0/pusher.min.js"></script>
+<script>
+    // Включаем логирование для отладки
+    Pusher.logToConsole = true;
+
+    var pusher = new Pusher('{{ env("PUSHER_APP_KEY") }}', {
+        cluster: '{{ env("PUSHER_APP_CLUSTER") }}',
+        encrypted: true
+    });
+
+    var channel = pusher.subscribe('my-channel');
+    channel.bind('my-event', function(data) {
+        // Показываем alert при приходе события
+        alert('Новое событие: ' + JSON.stringify(data));
+    });
+</script>
+
 @endsection
